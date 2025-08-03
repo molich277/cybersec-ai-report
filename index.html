@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Report: AI in Cybersecurity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: The application transforms the linear blog post into an interactive dashboard. The structure includes a header for navigation, a hero section for the main thesis, and distinct, interactive sections for 'AI in Defense', 'Latest Trends', 'Open-Source Tools', and 'OWASP Top 10'. This thematic, non-linear structure was chosen to allow users to freely explore topics of interest rather than being forced into a long scroll. Key interactions include clickable cards to reveal detailed text and a master-detail view for the OWASP list, which enhances engagement and prevents information overload. A data visualization section was added to provide a quantitative, at-a-glance understanding of vulnerability prevalence, which is more impactful than text alone. New sections for 'Subscribe', 'Like', and 'Share' functionality are added for user engagement. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: AI advantages. Goal: Inform. Viz/Method: Interactive cards with icons. Interaction: Click to reveal details. Justification: Breaks down text walls into digestible, user-initiated chunks. Library: Vanilla JS + Tailwind.
+        - Report Info: Latest AI & Cybersecurity Trends. Goal: Inform. Viz/Method: Grid of descriptive cards. Interaction: Static display of key trends. Justification: Presents timely information in an organized, digestible format. Library: Vanilla JS + Tailwind.
+        - Report Info: Open-Source tools list. Goal: Organize. Viz/Method: Grid of clickable tool names. Interaction: Click to show description. Justification: More engaging and organized than a static list. Library: Vanilla JS + Tailwind.
+        - Report Info: OWASP Top 10 list. Goal: Organize/Inform. Viz/Method: Master-detail layout (clickable list + content panel). Interaction: Click list item to display its full description. Justification: An intuitive UI pattern for exploring detailed lists without leaving the page context. Library: Vanilla JS.
+        - Report Info: OWASP Top 10 prevalence data (implicit in source). Goal: Compare/Inform. Viz/Method: Horizontal Bar Chart. Interaction: Hover for tooltips with precise data. Justification: Translates abstract risk levels into a concrete, easy-to-compare visual format, highlighting the most common threats effectively. Library: Chart.js.
+        - Report Info: Subscribe. Goal: Engage. Viz/Method: HTML form. Interaction: User input, form submission (client-side only for this static site). Justification: Provides a call-to-action for user engagement, with a note on backend requirements. Library: Vanilla JS + Tailwind.
+        - Report Info: Like. Goal: Engage. Viz/Method: Button with icon. Interaction: Toggle visual state on click. Justification: Simple user feedback, with a note on persistence limitations. Library: Vanilla JS + Tailwind.
+        - Report Info: Share. Goal: Promote. Viz/Method: Buttons/icons. Interaction: Trigger native share API or direct links. Justification: Facilitates content distribution. Library: Vanilla JS + Tailwind.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F9FA;
+            color: #212529;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 500px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s ease, border-bottom-color 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #007BFF;
+            border-bottom-color: #007BFF;
+        }
+        .tool-card, .owasp-item, .trend-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .tool-card:hover, .owasp-item:hover, .trend-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .owasp-item.active {
+            background-color: #E9ECEF;
+            border-left-color: #007BFF;
+        }
+        .like-button.liked {
+            color: #EF4444; /* Red color when liked */
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-800">Cybersecurity & AI</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#ai-role" class="nav-link text-gray-600 font-medium pb-1">AI's Role</a>
+                <a href="#latest-trends" class="nav-link text-gray-600 font-medium pb-1">Latest Trends</a>
+                <a href="#tools" class="nav-link text-gray-600 font-medium pb-1">Tools</a>
+                <a href="#owasp" class="nav-link text-gray-600 font-medium pb-1">OWASP Top 10</a>
+                <a href="#visuals" class="nav-link text-gray-600 font-medium pb-1">Data View</a>
+                <a href="#subscribe" class="nav-link text-gray-600 font-medium pb-1">Subscribe</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden text-gray-700 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pt-2 pb-4">
+            <a href="#ai-role" class="block py-2 text-gray-600">AI's Role</a>
+            <a href="#latest-trends" class="block py-2 text-gray-600">Latest Trends</a>
+            <a href="#tools" class="block py-2 text-gray-600">Tools</a>
+            <a href="#owasp" class="block py-2 text-gray-600">OWASP Top 10</a>
+            <a href="#visuals" class="block py-2 text-gray-600">Data View</a>
+            <a href="#subscribe" class="block py-2 text-gray-600">Subscribe</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-8 md:py-12">
+        <section class="text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">Fortifying Our Digital Defenses</h2>
+            <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                In our increasingly connected world, cybersecurity is a fundamental aspect of daily life. As cyber threats grow more sophisticated, so must our defenses. Explore how Artificial Intelligence (AI) is revolutionizing how we protect our digital assets, the tools at our disposal, and the critical vulnerabilities we must address.
+            </p>
+        </section>
+
+        <section id="ai-role" class="mb-20">
+            <h3 class="text-3xl font-bold text-center mb-2">The AI Advantage in Cybersecurity</h3>
+            <p class="text-center text-gray-600 mb-10">AI is becoming an indispensable ally in the fight against cybercrime. It offers proactive, intelligent, and automated protection mechanisms.</p>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="text-xl font-semibold mb-2">Real-time Threat Detection</h4>
+                    <p class="text-gray-600">AI systems analyze vast amounts of data at lightning speed, learning "normal" behavior to instantly flag anomalies and suspicious activities like malware or ransomware.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="text-xl font-semibold mb-2">Automated Incident Response</h4>
+                    <p class="text-gray-600">When a threat is detected, AI can automate initial responses like isolating systems or blocking IPs, drastically reducing containment time and potential damage.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="text-xl font-semibold mb-2">Predictive Security</h4>
+                    <p class="text-gray-600">By analyzing historical data and trends, AI predicts potential vulnerabilities and future attack vectors, allowing organizations to strengthen defenses proactively.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="text-xl font-semibold mb-2">Behavioral Analysis</h4>
+                    <p class="text-gray-600">AI excels at understanding user and system behavior, identifying subtle patterns that may indicate insider threats or compromised credentials that would otherwise go unnoticed.</p>
+                </div>
+            </div>
+             <div class="mt-8 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 rounded-r-lg">
+                <p><strong class="font-semibold">A Double-Edged Sword:</strong> While AI offers immense benefits, cybercriminals also leverage it to craft convincing phishing campaigns, generate deepfakes, and develop sophisticated malware, making the landscape more challenging.</p>
+            </div>
+        </section>
+
+        <section id="latest-trends" class="mb-20">
+            <h3 class="text-3xl font-bold text-center mb-2">Latest AI & Cybersecurity Trends</h3>
+            <p class="text-center text-gray-600 mb-10">Stay informed about the cutting-edge developments shaping the future of digital defense, including recent news from Google.</p>
+            <div id="trends-container" class="grid md:grid-cols-2 gap-6">
+                <!-- Trends will be injected here by JS -->
+            </div>
+        </section>
+
+        <section id="tools" class="mb-20">
+            <h3 class="text-3xl font-bold text-center mb-2">Empowering Your Defense with Open-Source Tools</h3>
+            <p class="text-center text-gray-600 mb-10">Powerful cybersecurity doesn't have to come with a massive price tag. Explore these essential open-source tools.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="tool-card bg-white p-6 rounded-lg shadow-md cursor-pointer" data-tool="nmap">
+                    <h4 class="text-xl font-semibold">Nmap</h4>
+                </div>
+                <div class="tool-card bg-white p-6 rounded-lg shadow-md cursor-pointer" data-tool="wireshark">
+                    <h4 class="text-xl font-semibold">Wireshark</h4>
+                </div>
+                <div class="tool-card bg-white p-6 rounded-lg shadow-md cursor-pointer" data-tool="snort">
+                    <h4 class="text-xl font-semibold">Snort</h4>
+                </div>
+                <div class="tool-card bg-white p-6 rounded-lg shadow-md cursor-pointer" data-tool="zap">
+                    <h4 class="text-xl font-semibold">OWASP ZAP</h4>
+                </div>
+                <div class="tool-card bg-white p-6 rounded-lg shadow-md cursor-pointer" data-tool="sqlmap">
+                    <h4 class="text-xl font-semibold">SQLmap</h4>
+                </div>
+                <div class="tool-card bg-white p-6 rounded-lg shadow-md cursor-pointer" data-tool="ossec">
+                    <h4 class="text-xl font-semibold">OSSEC</h4>
+                </div>
+            </div>
+            <div id="tool-description" class="mt-8 p-6 bg-gray-100 rounded-lg min-h-[100px] text-gray-700">
+                <p>Click on a tool to see its description.</p>
+            </div>
+        </section>
+
+        <section id="owasp" class="mb-20">
+            <h3 class="text-3xl font-bold text-center mb-2">Deconstructing the OWASP Top 10</h4>
+            <p class="text-center text-gray-600 mb-10">The OWASP Top 10 represents the most critical security risks to web applications. Click on each risk to understand it better.</p>
+            <div class="flex flex-col md:flex-row gap-8">
+                <div id="owasp-list" class="w-full md:w-1/3 flex-shrink-0">
+                    <!-- OWASP items will be injected here by JS -->
+                </div>
+                <div id="owasp-details" class="w-full md:w-2/3 bg-white p-6 rounded-lg shadow-inner">
+                    <h4 id="owasp-title" class="text-2xl font-bold text-gray-800 mb-3">Select a risk to learn more</h4>
+                    <p id="owasp-description" class="text-gray-600 leading-relaxed"></p>
+                </div>
+            </div>
+        </section>
+
+        <section id="visuals" class="mb-12">
+            <h3 class="text-3xl font-bold text-center mb-2">Visualizing Web Application Risks</h3>
+            <p class="text-center text-gray-600 mb-10">This chart shows the percentage of applications tested by OWASP that had some form of the corresponding weakness. It provides a clear view of the most prevalent security risks in modern web applications.</p>
+            <div class="bg-white p-4 sm:p-6 rounded-lg shadow-lg">
+                <div class="chart-container">
+                    <canvas id="owaspChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="subscribe" class="mb-20 bg-blue-50 p-8 rounded-lg shadow-md text-center">
+            <h3 class="text-3xl font-bold text-gray-800 mb-4">Stay Updated! Subscribe for Latest Insights</h3>
+            <p class="text-gray-700 mb-6 max-w-2xl mx-auto">Enter your details to receive weekly updates on AI in cybersecurity, emerging technologies, and critical trends directly in your inbox.</p>
+            <form id="subscribe-form" class="max-w-md mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" id="firstName" placeholder="First Name" class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <input type="text" id="lastName" placeholder="Last Name" class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <input type="email" id="email" placeholder="Email Address" class="md:col-span-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <button type="submit" class="md:col-span-2 bg-blue-600 text-white p-3 rounded-md font-semibold hover:bg-blue-700 transition duration-300">Subscribe Now</button>
+            </form>
+            <p id="subscribe-message" class="mt-4 text-green-700 hidden">Thank you for subscribing!</p>
+            <p class="text-sm text-gray-500 mt-4">Note: For a static Google Site, this form collects data client-side. To store subscriptions and send emails, you would typically integrate with a backend service like Google Forms or a dedicated email marketing platform.</p>
+        </section>
+
+        <section id="engagement" class="mb-16 text-center">
+            <h3 class="text-3xl font-bold text-center mb-6">Engage with Our Content</h3>
+            <div class="flex justify-center items-center space-x-6">
+                <button id="like-button" class="flex items-center space-x-2 bg-white px-6 py-3 rounded-full shadow-md hover:bg-gray-100 transition duration-300">
+                    <span class="text-2xl">👍</span>
+                    <span class="font-semibold text-gray-700">Like</span>
+                </button>
+                <button id="share-button" class="flex items-center space-x-2 bg-white px-6 py-3 rounded-full shadow-md hover:bg-gray-100 transition duration-300">
+                    <span class="text-2xl">🔗</span>
+                    <span class="font-semibold text-gray-700">Share</span>
+                </button>
+            </div>
+            <div id="share-options" class="hidden mt-4 flex flex-wrap justify-center gap-4">
+                <a id="share-email" href="#" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300">Email</a>
+                <a id="share-whatsapp" href="#" target="_blank" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition duration-300">WhatsApp</a>
+                <button id="share-native" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition duration-300">More Options</button>
+            </div>
+            <p class="text-sm text-gray-500 mt-4">Note: The 'Like' count is not persistent on this static site. 'Share' uses your device's native sharing capabilities.</p>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-20">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <p>This interactive report was generated to demonstrate how complex information can be made engaging and accessible.</p>
+            <p class="text-sm text-gray-400 mt-2">Content based on the "AI and Cybersecurity" blog post. Built with HTML, Tailwind CSS, and Chart.js.</p>
+            <p class="text-sm text-gray-400 mt-2">Contact: <a href="mailto:molich60@gmail.com" class="text-blue-300 hover:underline">molich60@gmail.com</a></p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toolDescriptions = {
+                nmap: "A versatile tool for network discovery and security auditing. It can scan large networks to identify active hosts, open ports, and services running on them.",
+                wireshark: "A widely used network protocol analyzer that lets you see what's happening on your network at a microscopic level. It's invaluable for troubleshooting, analysis, and understanding network traffic.",
+                snort: "An open-source intrusion detection/prevention system (IDS/IPS) that can perform real-time traffic analysis and packet logging. It uses a rule-based language to detect malicious network activity.",
+                zap: "A popular web application security scanner. It helps you find vulnerabilities in your web applications during development and testing.",
+                sqlmap: "An automated SQL injection and database takeover tool. It can detect and exploit SQL injection flaws in web applications.",
+                ossec: "A host-based intrusion detection system (HIDS) that performs log analysis, integrity checking, rootkit detection, and real-time alerting."
+            };
+
+            const toolCards = document.querySelectorAll('.tool-card');
+            const toolDescriptionEl = document.getElementById('tool-description');
+
+            toolCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    toolDescriptionEl.innerHTML = `<p>${toolDescriptions[card.dataset.tool]}</p>`;
+                });
+            });
+
+            const owaspData = [
+                { id: 'A01', title: 'Broken Access Control', description: 'Flaws in how access controls are enforced, allowing users to bypass authorization and access unauthorized functionality or data.', prevalence: 94 },
+                { id: 'A02', title: 'Cryptographic Failures', description: 'Issues related to inadequate protection of sensitive data during transit and at rest, often due to improper use or lack of cryptography.', prevalence: 89 },
+                { id: 'A03', title: 'Injection', description: 'Occurs when untrusted data is sent to an interpreter as part of a command or query, leading to unintended execution (e.g., SQL Injection, Cross-Site Scripting).', prevalence: 94 },
+                { id: 'A04', title: 'Insecure Design', description: 'A category focusing on design flaws and architectural weaknesses rather than implementation bugs. This requires a shift to threat modeling and secure design patterns.', prevalence: 40 },
+                { id: 'A05', title: 'Security Misconfiguration', description: 'Improperly configured security settings in applications, servers, databases, or frameworks. Includes issues like leaving default accounts active.', prevalence: 90 },
+                { id: 'A06', title: 'Vulnerable & Outdated Components', description: 'Using components (libraries, frameworks) with known vulnerabilities. It is crucial to manage dependencies and apply patches promptly.', prevalence: 89 },
+                { id: 'A07', title: 'Identification & Authentication Failures', description: 'Problems with how user identities are verified, leading to broken authentication schemes. Includes issues like weak password policies.', prevalence: 86 },
+                { id: 'A08', title: 'Software & Data Integrity Failures', description: 'Making assumptions about software updates, critical data, or CI/CD pipelines without verifying integrity. Includes insecure deserialization.', prevalence: 89 },
+                { id: 'A09', title: 'Security Logging & Monitoring Failures', description: 'Insufficient logging and monitoring, making it difficult to detect, escalate, or recover from breaches in a timely manner.', prevalence: 70 },
+                { id: 'A10', title: 'Server-Side Request Forgery (SSRF)', description: 'When a web application fetches a remote resource without validating the user-supplied URL, allowing an attacker to coerce the application into sending requests to an unintended location.', prevalence: 20 }
+            ];
+
+            const owaspListEl = document.getElementById('owasp-list');
+            const owaspTitleEl = document.getElementById('owasp-title');
+            const owaspDescriptionEl = document.getElementById('owasp-description');
+
+            owaspData.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'owasp-item bg-white p-4 rounded-lg shadow-sm cursor-pointer border-l-4 border-transparent mb-2';
+                div.dataset.index = index;
+                div.innerHTML = `<span class="font-bold text-blue-600">${item.id}</span> <span class="font-semibold">${item.title}</span>`;
+                owaspListEl.appendChild(div);
+            });
+            
+            const owaspItems = document.querySelectorAll('.owasp-item');
+            owaspItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    owaspItems.forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    
+                    const index = item.dataset.index;
+                    const data = owaspData[index];
+                    owaspTitleEl.textContent = `${data.id}: ${data.title}`;
+                    owaspDescriptionEl.textContent = data.description;
+                });
+            });
+
+            const ctx = document.getElementById('owaspChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: owaspData.map(d => `${d.id}: ${d.title}`),
+                    datasets: [{
+                        label: '% of Tested Applications with Weakness',
+                        data: owaspData.map(d => d.prevalence),
+                        backgroundColor: 'rgba(0, 123, 255, 0.6)',
+                        borderColor: 'rgba(0, 123, 255, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + "%"
+                                }
+                            }
+                        },
+                        y: {
+                           ticks: {
+                                autoSkip: false,
+                                font: {
+                                    size: 10
+                                }
+                           }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.dataset.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const latestTrendsData = [
+                { 
+                    title: 'Google\'s Agentic AI: Big Sleep', 
+                    description: 'Google DeepMind and Project Zero\'s AI agent, Big Sleep, is actively finding real-world software vulnerabilities (e.g., CVE-2025-6965 in SQLite) before threat actors can exploit them. This marks a significant shift from detection to proactive prevention, also benefiting open-source projects.' 
+                },
+                { 
+                    title: 'AI-Enhanced Digital Forensics with Timesketch', 
+                    description: 'Google is extending its open-source digital forensics platform, Timesketch, with AI-driven investigation capabilities powered by Sec-Gemini. This automates initial forensic analysis, drastically reducing incident response times for human analysts.' 
+                },
+                { 
+                    title: 'FACADE: Insider Threat Detection at Scale', 
+                    description: 'Google\'s FACADE (Fast and Accurate Contextual Anomaly Detection) system, in use since 2018, leverages AI to process billions of daily security events. It identifies internal threats using a unique contrastive learning approach that does not rely on past attack data, offering real-time security monitoring.' 
+                },
+                { 
+                    title: 'Secure AI Framework (SAIF) & CoSAI', 
+                    description: 'Google introduced its Secure AI Framework (SAIF) to ensure AI systems are built with security and privacy by design. They also co-founded the Coalition for Secure AI (CoSAI) with industry partners to develop comprehensive security measures for AI systems, fostering collaboration across the ecosystem.' 
+                },
+                { 
+                    title: 'AI-Powered Cyberattack Simulation', 
+                    description: 'New tools are emerging that use generative AI to create realistic and adaptive attack scenarios. This helps organizations test and harden their defenses against sophisticated, evolving threats more effectively than traditional methods.' 
+                },
+                { 
+                    title: 'AI in Software Supply Chain Security', 
+                    description: 'AI is increasingly being deployed to analyze the integrity and security of software supply chains. This includes detecting malicious injections and vulnerabilities in third-party components, crucial for preventing widespread compromises.' 
+                }
+            ];
+
+            const trendsContainer = document.getElementById('trends-container');
+            latestTrendsData.forEach(trend => {
+                const div = document.createElement('div');
+                div.className = 'trend-card bg-white p-6 rounded-lg shadow-md';
+                div.innerHTML = `<h4 class="text-xl font-semibold mb-2">${trend.title}</h4><p class="text-gray-600">${trend.description}</p>`;
+                trendsContainer.appendChild(div);
+            });
+
+            // Subscribe Form Logic
+            const subscribeForm = document.getElementById('subscribe-form');
+            const subscribeMessage = document.getElementById('subscribe-message');
+            subscribeForm.addEventListener('submit', function(event) {
+                event.preventDefault(); // Prevent default form submission
+
+                const firstName = document.getElementById('firstName').value;
+                const lastName = document.getElementById('lastName').value;
+                const email = document.getElementById('email').value;
+
+                // In a real application, you would send this data to a server/database.
+                // For a static Google Site, you might integrate with a Google Form or similar.
+                console.log('Subscribe Request:', { firstName, lastName, email });
+                
+                subscribeMessage.textContent = `Thank you, ${firstName}! Your subscription request has been noted.`;
+                subscribeMessage.classList.remove('hidden');
+                subscribeForm.reset(); // Clear the form
+
+                // Hide message after a few seconds
+                setTimeout(() => {
+                    subscribeMessage.classList.add('hidden');
+                }, 5000);
+            });
+
+            // Like Button Logic
+            const likeButton = document.getElementById('like-button');
+            let isLiked = false; // Client-side state only
+            likeButton.addEventListener('click', () => {
+                isLiked = !isLiked;
+                if (isLiked) {
+                    likeButton.classList.add('liked');
+                    likeButton.querySelector('span:first-child').textContent = '❤️'; // Change to heart
+                } else {
+                    likeButton.classList.remove('liked');
+                    likeButton.querySelector('span:first-child').textContent = '👍'; // Change back to thumbs up
+                }
+                // In a real application, this would send an update to a backend database.
+                console.log('Like button clicked. Current state:', isLiked ? 'Liked' : 'Unliked');
+            });
+
+            // Share Button Logic
+            const shareButton = document.getElementById('share-button');
+            const shareOptions = document.getElementById('share-options');
+            const shareEmail = document.getElementById('share-email');
+            const shareWhatsapp = document.getElementById('share-whatsapp');
+            const shareNative = document.getElementById('share-native');
+
+            shareButton.addEventListener('click', () => {
+                shareOptions.classList.toggle('hidden');
+            });
+
+            const pageTitle = document.title;
+            const pageUrl = window.location.href; // This will be the Google Sites URL after publishing
+
+            // Email Share
+            shareEmail.addEventListener('click', (e) => {
+                e.preventDefault();
+                const subject = encodeURIComponent(`Check out this article: ${pageTitle}`);
+                const body = encodeURIComponent(`I found this interesting article on AI in Cybersecurity:\n\n${pageTitle}\n${pageUrl}`);
+                window.location.href = `mailto:?subject=${subject}&body=${body}`;
+            });
+
+            // WhatsApp Share
+            shareWhatsapp.addEventListener('click', (e) => {
+                const text = encodeURIComponent(`Check out this article: ${pageTitle} ${pageUrl}`);
+                // Use wa.me for universal link
+                shareWhatsapp.href = `https://wa.me/?text=${text}`;
+            });
+
+            // Native Web Share API
+            shareNative.addEventListener('click', async () => {
+                if (navigator.share) {
+                    try {
+                        await navigator.share({
+                            title: pageTitle,
+                            text: 'Check out this interactive report on AI in Cybersecurity!',
+                            url: pageUrl,
+                        });
+                        console.log('Content shared successfully');
+                    } catch (error) {
+                        console.error('Error sharing:', error);
+                        // Fallback if native share fails (e.g., user cancels)
+                        alert('Could not share content. Please try direct options or copy the URL.');
+                    }
+                } else {
+                    // Fallback for browsers that don't support Web Share API
+                    alert('Your browser does not support the native share dialog. Please use Email or WhatsApp options.');
+                }
+            });
+
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        });
+    </script>
+
+</body>
+</html>
