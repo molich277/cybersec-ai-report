@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
@@ -190,14 +189,14 @@
         <section id="subscribe" class="mb-20 bg-blue-50 p-8 rounded-lg shadow-md text-center">
             <h3 class="text-3xl font-bold text-gray-800 mb-4">Stay Updated! Subscribe for Latest Insights</h3>
             <p class="text-gray-700 mb-6 max-w-2xl mx-auto">Enter your details to receive weekly updates on AI in cybersecurity, emerging technologies, and critical trends directly in your inbox.</p>
-            <form id="subscribe-form" class="max-w-md mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="text" id="firstName" placeholder="First Name" class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                <input type="text" id="lastName" placeholder="Last Name" class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                <input type="email" id="email" placeholder="Email Address" class="md:col-span-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            <form id="subscribe-form" class="max-w-md mx-auto grid grid-cols-1 md:grid-cols-2 gap-4" action="https://docs.google.com/forms/d/e/1FAIpQLScHTDAAuIIsIfTyCKyQAzKqZyUuWxOOiAaBQMa_HAldU5Kyhw/viewform" method="POST">
+                <input type="text" id="firstName" name="John&entry.912730563" placeholder="First Name" class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <input type="text" id="lastName" name="Doe&entry.1759010004" placeholder="Last Name" class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <input type="email" id="email" name="john.doe@example.com" placeholder="Email Address" class="md:col-span-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                 <button type="submit" class="md:col-span-2 bg-blue-600 text-white p-3 rounded-md font-semibold hover:bg-blue-700 transition duration-300">Subscribe Now</button>
             </form>
-            <p id="subscribe-message" class="mt-4 text-green-700 hidden">Thank you for subscribing!</p>
-            <p class="text-sm text-gray-500 mt-4">Note: For a static Google Site, this form collects data client-side. To store subscriptions and send emails, you would typically integrate with a backend service like Google Forms or a dedicated email marketing platform.</p>
+            
+            
         </section>
 
         <section id="engagement" class="mb-16 text-center">
@@ -217,7 +216,7 @@
                 <a id="share-whatsapp" href="#" target="_blank" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition duration-300">WhatsApp</a>
                 <button id="share-native" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition duration-300">More Options</button>
             </div>
-            <p class="text-sm text-gray-500 mt-4">Note: The 'Like' count is not persistent on this static site. 'Share' uses your device's native sharing capabilities.</p>
+            
         </section>
 
     </main>
@@ -374,30 +373,7 @@
                 trendsContainer.appendChild(div);
             });
 
-            // Subscribe Form Logic
-            const subscribeForm = document.getElementById('subscribe-form');
-            const subscribeMessage = document.getElementById('subscribe-message');
-            subscribeForm.addEventListener('submit', function(event) {
-                event.preventDefault(); // Prevent default form submission
-
-                const firstName = document.getElementById('firstName').value;
-                const lastName = document.getElementById('lastName').value;
-                const email = document.getElementById('email').value;
-
-                // In a real application, you would send this data to a server/database.
-                // For a static Google Site, you might integrate with a Google Form or similar.
-                console.log('Subscribe Request:', { firstName, lastName, email });
-                
-                subscribeMessage.textContent = `Thank you, ${firstName}! Your subscription request has been noted.`;
-                subscribeMessage.classList.remove('hidden');
-                subscribeForm.reset(); // Clear the form
-
-                // Hide message after a few seconds
-                setTimeout(() => {
-                    subscribeMessage.classList.add('hidden');
-                }, 5000);
-            });
-
+                       
             // Like Button Logic
             const likeButton = document.getElementById('like-button');
             let isLiked = false; // Client-side state only
